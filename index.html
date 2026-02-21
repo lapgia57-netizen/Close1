@@ -1,160 +1,537 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ĐÓNG CỬA TẠM THỜI - Hẹn Gặp Lại!</title>
-  
-  <!-- Google Fonts cho font tiếng Việt đẹp -->
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet"/>
-  
+  <title>Web3 Accounts & Domains Marketplace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getDatabase, ref, onValue, push, set, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    window.firebaseModules = { initializeApp, getDatabase, ref, onValue, push, set, update, serverTimestamp };
+  </script>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Be Vietnam Pro', sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      overflow-x: hidden;
-    }
-    .container {
-      max-width: 720px;
-      width: 100%;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(10px);
-      border-radius: 24px;
-      padding: 40px 30px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.1);
-      animation: fadeIn 1.2s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity:0; transform: translateY(30px); }
-      to   { opacity:1; transform: translateY(0); }
-    }
-    h1 {
-      font-family: 'Quicksand', sans-serif;
-      font-size: clamp(3.5rem, 12vw, 6rem);
-      margin: 0.1em 0;
-      color: #ff4757;
-      text-shadow: 0 4px 15px rgba(255,71,87,0.5);
-    }
-    .emoji {
-      font-size: clamp(4rem, 15vw, 7rem);
-      margin: 15px 0;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%,100% { transform: scale(1); }
-      50%     { transform: scale(1.08); }
-    }
-    p {
-      font-size: 1.4rem;
-      line-height: 1.6;
-      margin: 1.2em 0;
-      opacity: 0.95;
-    }
-    .time {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #ffd32a;
-      margin: 2em 0 1em;
-      padding: 12px 20px;
-      background: rgba(255,211,42,0.15);
-      border-radius: 12px;
-      display: inline-block;
-    }
-    .highlight { color: #4fffa5; }
-    
-    .image-wrapper {
-      margin: 30px auto;
-      max-width: 320px;
-      overflow: hidden;
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-      transition: all 0.4s ease;
-    }
-    .image-wrapper img {
-      width: 100%;
-      height: auto;
-      display: block;
-      transition: transform 0.5s ease;
-    }
-    .image-wrapper:hover {
-      transform: translateY(-10px) scale(1.04);
-      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
-    }
-    .image-wrapper:hover img {
-      transform: scale(1.08);
-    }
-    
-    .small {
-      font-size: 1.15rem;
-      opacity: 0.8;
-      margin-top: 2em;
-    }
-    
-    @media (max-width: 480px) {
-      .container { padding: 30px 20px; }
-      h1 { font-size: 4.5rem; }
-      .emoji { font-size: 5.5rem; }
-    }
+    .skeleton { background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+    @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    #postModal, #detailModal, #editModal { transition: opacity 0.3s ease; }
+    .filter-active { background-color: #7c3aed !important; color: white !important; }
   </style>
 </head>
-<body>
+<body class="bg-gray-950 text-gray-100 min-h-screen font-sans">
 
-<div class="container">
-  <div class="emoji">🔒😴</div>
-  
-  <h1>ĐÓNG CỬA</h1>
-  
-  <p>Hiện tại quán đang tạm nghỉ.<br>
-  Mong các bạn thông cảm và hẹn gặp lại nha! ❤️🙏</p>
+  <!-- Header -->
+  <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-purple-400">Web3 Accounts & Domains Market</h1>
+      <div class="flex items-center gap-4">
+        <button id="connectBtn" class="bg-purple-600 hover:bg-purple-700 px-5 py-2.5 rounded-lg font-medium transition">Connect Wallet</button>
+        <span id="userAddress" class="text-sm text-gray-400 hidden">...</span>
+        <button id="postBtn" class="bg-green-600 hover:bg-green-700 px-5 py-2.5 rounded-lg font-medium transition hidden">Post Listing</button>
+        <button id="disconnectBtn" class="bg-red-600 hover:bg-red-700 px-5 py-2.5 rounded-lg font-medium transition hidden">Disconnect</button>
+      </div>
+    </div>
+  </header>
 
-  <!-- Chọn 1 trong các ảnh dưới đây bằng cách uncomment (xóa <!-- và -->) -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-  <!-- Ảnh 1: Biển đóng cửa kiểu Việt Nam thực tế (rất phổ biến) -->
-  <div class="image-wrapper">
-    <img src="https://danviet.ex-cdn.com/files/f1/296231569849192448/2022/1/6/hang-quan-nghi-tet-som-9-16414466769831583671719-1641446803700729373906.jpeg" 
-         alt="Quán đóng cửa Việt Nam">
+    <!-- Search & Filters -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-8">
+      <div class="relative flex-1">
+        <input id="searchInput" type="text" placeholder="Search by title or description..." class="w-full bg-gray-800 rounded-full px-5 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        <button id="searchBtn" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-400">🔍</button>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button id="filterAll" class="px-5 py-2 bg-gray-800 rounded-full text-sm font-medium hover:bg-gray-700 filter-active">All</button>
+        <button id="filterAccount" class="px-5 py-2 bg-gray-800 rounded-full text-sm font-medium hover:bg-gray-700">Accounts</button>
+        <button id="filterDomain" class="px-5 py-2 bg-gray-800 rounded-full text-sm font-medium hover:bg-gray-700">Domains</button>
+        <button id="sortNewest" class="px-5 py-2 bg-gray-800 rounded-full text-sm font-medium hover:bg-gray-700 filter-active">Newest</button>
+        <button id="sortPriceAsc" class="px-5 py-2 bg-gray-800 rounded-full text-sm font-medium hover:bg-gray-700">Price: Low to High</button>
+        <button id="sortPriceDesc" class="px-5 py-2 bg-gray-800 rounded-full text-sm font-medium hover:bg-gray-700">Price: High to Low</button>
+      </div>
+    </div>
+
+    <!-- Marketplace -->
+    <div id="marketplace" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[400px]"></div>
+
+    <!-- States -->
+    <div id="loadingState" class="text-center py-20 text-gray-400 hidden">Loading data...</div>
+    <div id="emptyState" class="text-center py-20 text-gray-400 hidden">No matching listings found</div>
+    <div id="notConnected" class="text-center py-12 text-gray-400 hidden">
+      <p>Connect your wallet to start listing items</p>
+    </div>
+  </main>
+
+  <!-- Post Modal -->
+  <div id="postModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-xl p-8 w-full max-w-lg mx-4">
+      <h2 class="text-2xl font-bold mb-6 text-purple-400">Create New Listing</h2>
+      <form id="postForm">
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Title</label>
+          <input type="text" id="title" required class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Type</label>
+          <select id="type" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+            <option value="account">Account</option>
+            <option value="domain">Domain</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Blockchain (Chain)</label>
+          <select id="chain" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+            <option value="ethereum">Ethereum</option>
+            <option value="solana">Solana</option>
+            <option value="base">Base</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Price (ETH)</label>
+          <input type="number" step="0.0001" min="0.0001" id="price" required class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm mb-1">Description</label>
+          <textarea id="description" rows="4" class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+        </div>
+        <p class="text-xs text-gray-500 mb-4">Note: Gas fees may apply depending on network. Listings are stored on Firebase for now.</p>
+        <div class="flex justify-end gap-4">
+          <button type="button" id="closePostModal" class="px-6 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button>
+          <button type="submit" class="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700">Post Listing</button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <!-- Ảnh 2: Cửa cuốn + bảng nghỉ vui (vibe "vợ đẻ con trai") -->
-  <!-- 
-  <div class="image-wrapper">
-    <img src="https://vnn-imgs-f.vgcloud.vn/2019/10/26/09/ban-hang-ba-dao-1.jpg?width=0&s=IHj6JGCx3UasCY2AkdpYIg" 
-         alt="Biển nghỉ bá đạo">
-  </div>
-  -->
-
-  <!-- Ảnh 3: Cửa cuốn xanh + thông báo tạm nghỉ (kiểu dịch bệnh) -->
-  <!-- 
-  <div class="image-wrapper">
-    <img src="https://image.plo.vn/w1000/Uploaded/2026/zaaekt/2020_03_25/tam-dong-cua-covid19_qoyh.jpg.webp" 
-         alt="Cửa cuốn tạm nghỉ">
-  </div>
-  -->
-
-  <!-- Ảnh 4: Mèo ngủ cute, vibe chill nghỉ ngơi -->
-  <!-- 
-  <div class="image-wrapper">
-    <img src="https://vihema.com/wp-content/uploads/2025/12/hinh-anh-ve-nhung-chu-meo-de-thuong-65d7f0.webp" 
-         alt="Mèo ngủ ngon lành">
-  </div>
-  -->
-
-  <div class="time">
-    Mở cửa lại: <span class="highlight">8:30 sáng mai</span> nhé!
+  <!-- Detail Modal -->
+  <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-xl p-8 w-full max-w-lg mx-4">
+      <h2 id="detailTitle" class="text-2xl font-bold mb-4 text-purple-400"></h2>
+      <p id="detailType" class="text-sm text-gray-400 mb-2"></p>
+      <p id="detailChain" class="text-sm text-blue-400 mb-2"></p>
+      <p id="detailDescription" class="text-gray-300 mb-4"></p>
+      <p id="detailPrice" class="text-xl font-bold text-green-400 mb-6"></p>
+      <p id="detailSeller" class="text-xs text-gray-500 mb-6"></p>
+      <p id="detailTime" class="text-xs text-gray-500 mb-6"></p>
+      <div class="flex justify-end gap-4">
+        <button id="closeDetailModal" class="px-6 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">Close</button>
+        <button id="offerBtn" class="px-6 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 hidden">Make Offer</button>
+        <button id="buyBtn" class="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 hidden">Buy Now</button>
+        <button id="editBtn" class="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 hidden">Edit Listing</button>
+      </div>
+    </div>
   </div>
 
-  <p class="small">Cảm ơn mọi người đã ghé qua!<br>
-  Yêu thương nhiều lắm ạ ~ 💕</p>
-</div>
+  <!-- Edit Modal -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-xl p-8 w-full max-w-lg mx-4">
+      <h2 class="text-2xl font-bold mb-6 text-purple-400">Edit Listing</h2>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Title</label>
+          <input type="text" id="editTitle" required class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Type</label>
+          <select id="editType" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+            <option value="account">Account</option>
+            <option value="domain">Domain</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Blockchain (Chain)</label>
+          <select id="editChain" class="w-full bg-gray-700 rounded-lg px-4 py-2">
+            <option value="ethereum">Ethereum</option>
+            <option value="solana">Solana</option>
+            <option value="base">Base</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm mb-1">Price (ETH)</label>
+          <input type="number" step="0.0001" min="0.0001" id="editPrice" required class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm mb-1">Description</label>
+          <textarea id="editDescription" rows="4" class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+        </div>
+        <div class="flex justify-end gap-4">
+          <button type="button" id="closeEditModal" class="px-6 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button>
+          <button type="submit" class="px-6 py-2 bg-purple-600 rounded-lg hover:bg-purple-700">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <!-- Footer Disclaimer -->
+  <footer class="bg-gray-900 border-t border-gray-800 py-6 text-center text-sm text-gray-500">
+    <p>Disclaimer: This is a demo marketplace using Firebase for listings. Real transactions require smart contract integration. Use at your own risk.</p>
+  </footer>
+
+  <script type="module">
+    const { ethers } = window.ethers;
+    const { initializeApp, getDatabase, ref, onValue, push, set, update, serverTimestamp } = window.firebaseModules;
+
+    const firebaseConfig = { databaseURL: "https://barcarataz-default-rtdb.firebaseio.com/" };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Elements...
+    const connectBtn = document.getElementById('connectBtn');
+    const userAddressEl = document.getElementById('userAddress');
+    const postBtn = document.getElementById('postBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const marketplace = document.getElementById('marketplace');
+    const loadingState = document.getElementById('loadingState');
+    const emptyState = document.getElementById('emptyState');
+    const notConnected = document.getElementById('notConnected');
+    const postModal = document.getElementById('postModal');
+    const postForm = document.getElementById('postForm');
+    const closePostModal = document.getElementById('closePostModal');
+    const detailModal = document.getElementById('detailModal');
+    const closeDetailModal = document.getElementById('closeDetailModal');
+    const buyBtn = document.getElementById('buyBtn');
+    const offerBtn = document.getElementById('offerBtn');
+    const editBtn = document.getElementById('editBtn');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailType = document.getElementById('detailType');
+    const detailChain = document.getElementById('detailChain');
+    const detailDescription = document.getElementById('detailDescription');
+    const detailPrice = document.getElementById('detailPrice');
+    const detailSeller = document.getElementById('detailSeller');
+    const detailTime = document.getElementById('detailTime');
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editForm');
+    const closeEditModal = document.getElementById('closeEditModal');
+    const editId = document.getElementById('editId');
+    const editTitle = document.getElementById('editTitle');
+    const editType = document.getElementById('editType');
+    const editChain = document.getElementById('editChain');
+    const editPrice = document.getElementById('editPrice');
+    const editDescription = document.getElementById('editDescription');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const filterAll = document.getElementById('filterAll');
+    const filterAccount = document.getElementById('filterAccount');
+    const filterDomain = document.getElementById('filterDomain');
+    const sortNewest = document.getElementById('sortNewest');
+    const sortPriceAsc = document.getElementById('sortPriceAsc');
+    const sortPriceDesc = document.getElementById('sortPriceDesc');
+
+    let currentAddress = null;
+    let allItems = [];
+    let currentFilter = 'all';
+    let currentSort = 'newest';
+    let currentSearch = '';
+    let selectedItem = null;
+
+    function timeAgo(timestamp) {
+      if (!timestamp) return 'Unknown';
+      const now = Date.now();
+      const diff = now - timestamp;
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return Math.floor(diff / 60000) + ' min ago';
+      if (diff < 86400000) return Math.floor(diff / 3600000) + ' hr ago';
+      return new Date(timestamp).toLocaleDateString();
+    }
+
+    function showSkeletons(count = 8) {
+      marketplace.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const sk = document.createElement('div');
+        sk.className = 'bg-gray-800 rounded-xl overflow-hidden shadow-lg';
+        sk.innerHTML = `
+          <div class="h-48 skeleton"></div>
+          <div class="p-5">
+            <div class="h-6 w-4/5 bg-gray-700 rounded skeleton mb-3"></div>
+            <div class="h-4 w-3/5 bg-gray-700 rounded skeleton mb-4"></div>
+            <div class="flex justify-between">
+              <div class="h-7 w-24 bg-gray-700 rounded skeleton"></div>
+              <div class="h-9 w-28 bg-gray-700 rounded skeleton"></div>
+            </div>
+          </div>
+        `;
+        marketplace.appendChild(sk);
+      }
+    }
+
+    function listenToMarketplace() {
+      showSkeletons();
+      loadingState.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+
+      const itemsRef = ref(db, 'items');
+      onValue(itemsRef, (snapshot) => {
+        allItems = [];
+        snapshot.forEach(child => {
+          const item = child.val();
+          item.id = child.key;
+          if (item.createdAt && item.status !== 'sold') allItems.push(item);
+        });
+
+        allItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        updateDisplay();
+        loadingState.classList.add('hidden');
+      }, (err) => {
+        console.error(err);
+        marketplace.innerHTML = '<p class="col-span-full text-center py-20 text-red-400">Data connection error</p>';
+      });
+    }
+
+    function updateDisplay() {
+      let displayed = [...allItems];
+
+      if (currentFilter !== 'all') {
+        displayed = displayed.filter(item => item.type === currentFilter);
+      }
+
+      if (currentSearch) {
+        const term = currentSearch.toLowerCase();
+        displayed = displayed.filter(item =>
+          (item.title || '').toLowerCase().includes(term) ||
+          (item.description || '').toLowerCase().includes(term)
+        );
+      }
+
+      if (currentSort === 'priceAsc') {
+        displayed.sort((a, b) => (a.price || 0) - (b.price || 0));
+      } else if (currentSort === 'priceDesc') {
+        displayed.sort((a, b) => (b.price || 0) - (a.price || 0));
+      } // newest is default (already sorted)
+
+      renderItems(displayed);
+    }
+
+    function renderItems(items) {
+      marketplace.innerHTML = '';
+      if (items.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      const fragment = document.createDocumentFragment();
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition hover:-translate-y-1 duration-200 cursor-pointer';
+        card.innerHTML = `
+          <div class="h-48 bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center text-6xl relative">
+            ${item.type === 'domain' ? '🌐' : '🔑'}
+            <span class="absolute top-2 right-2 text-xs bg-gray-900 px-2 py-1 rounded-full">${item.chain || 'ETH'}</span>
+          </div>
+          <div class="p-5">
+            <h3 class="text-lg font-semibold mb-2 truncate">${item.title || 'No title'}</h3>
+            <p class="text-sm text-gray-400 mb-4 line-clamp-3">${item.description || 'No description'}</p>
+            <div class="flex justify-between items-center">
+              <span class="text-2xl font-bold text-green-400">${Number(item.price || 0).toFixed(4)} ETH</span>
+              <button class="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-lg text-sm">View Details</button>
+            </div>
+            <p class="text-xs text-gray-500 mt-4">Seller: ${item.seller ? item.seller.slice(0,6)+'...'+item.seller.slice(-4) : 'Anonymous'}</p>
+            <p class="text-xs text-gray-400 mt-1">${timeAgo(item.createdAt)}</p>
+          </div>
+        `;
+        card.onclick = () => showDetail(item);
+        fragment.appendChild(card);
+      });
+      marketplace.appendChild(fragment);
+    }
+
+    async function connectWallet() {
+      if (!window.ethereum) return alert("Please install MetaMask or an Ethereum wallet!");
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = await provider.getSigner();
+        currentAddress = await signer.getAddress();
+
+        userAddressEl.textContent = currentAddress.slice(0,6) + "..." + currentAddress.slice(-4);
+        userAddressEl.classList.remove('hidden');
+        connectBtn.textContent = "Connected";
+        connectBtn.classList.replace('bg-purple-600', 'bg-green-600');
+        connectBtn.disabled = true;
+        postBtn.classList.remove('hidden');
+        disconnectBtn.classList.remove('hidden');
+        notConnected.classList.add('hidden');
+      } catch (err) {
+        alert("Connection failed: " + err.message);
+      }
+    }
+
+    connectBtn.onclick = connectWallet;
+    disconnectBtn.onclick = () => {
+      currentAddress = null;
+      userAddressEl.classList.add('hidden');
+      postBtn.classList.add('hidden');
+      disconnectBtn.classList.add('hidden');
+      connectBtn.textContent = "Connect Wallet";
+      connectBtn.classList.replace('bg-green-600', 'bg-purple-600');
+      connectBtn.disabled = false;
+      notConnected.classList.remove('hidden');
+    };
+
+    postBtn.onclick = () => { if (currentAddress) postModal.classList.remove('hidden'); else alert("Please connect wallet!"); };
+    closePostModal.onclick = () => postModal.classList.add('hidden');
+    postModal.onclick = e => { if (e.target === postModal) postModal.classList.add('hidden'); };
+
+    postForm.onsubmit = async e => {
+      e.preventDefault();
+      if (!currentAddress) return;
+
+      const title = document.getElementById('title').value.trim();
+      const type = document.getElementById('type').value;
+      const chain = document.getElementById('chain').value;
+      const price = parseFloat(document.getElementById('price').value);
+      const description = document.getElementById('description').value.trim();
+
+      if (!title || isNaN(price) || price <= 0) return alert("Please fill in valid information!");
+
+      try {
+        const newRef = push(ref(db, 'items'));
+        await set(newRef, {
+          title, type, chain, price, description,
+          seller: currentAddress,
+          status: 'available',
+          createdAt: serverTimestamp()
+        });
+        alert("Listing posted successfully!");
+        postForm.reset();
+        postModal.classList.add('hidden');
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+
+    function showDetail(item) {
+      selectedItem = item;
+      detailTitle.textContent = item.title || 'No title';
+      detailType.textContent = `Type: ${item.type === 'domain' ? 'Domain' : 'Account'}`;
+      detailChain.textContent = `Chain: ${item.chain ? item.chain.charAt(0).toUpperCase() + item.chain.slice(1) : 'Ethereum'}`;
+      detailDescription.textContent = item.description || 'No description';
+      detailPrice.textContent = `${Number(item.price || 0).toFixed(4)} ETH`;
+      detailSeller.textContent = `Seller: ${item.seller.slice(0,6)}...${item.seller.slice(-4)}`;
+      detailTime.textContent = `Posted: ${timeAgo(item.createdAt)}`;
+
+      const isOwner = currentAddress && currentAddress === item.seller;
+      buyBtn.classList.toggle('hidden', !currentAddress || isOwner);
+      offerBtn.classList.toggle('hidden', !currentAddress || isOwner);
+      editBtn.classList.toggle('hidden', !isOwner);
+
+      detailModal.classList.remove('hidden');
+    }
+
+    closeDetailModal.onclick = () => detailModal.classList.add('hidden');
+    detailModal.onclick = e => { if (e.target === detailModal) detailModal.classList.add('hidden'); };
+
+    buyBtn.onclick = async () => {
+      if (!currentAddress || !selectedItem) return;
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const tx = await signer.sendTransaction({
+          to: selectedItem.seller,
+          value: ethers.parseEther(selectedItem.price.toString())
+        });
+        await tx.wait();
+
+        await update(ref(db, `items/${selectedItem.id}`), {
+          status: 'sold',
+          buyer: currentAddress,
+          soldAt: serverTimestamp()
+        });
+
+        alert("Purchase successful! Tx: " + tx.hash);
+        detailModal.classList.add('hidden');
+      } catch (err) {
+        alert("Purchase failed: " + err.message);
+      }
+    };
+
+    offerBtn.onclick = () => {
+      alert("Make Offer feature coming soon! (Will integrate on-chain offers)");
+    };
+
+    editBtn.onclick = () => {
+      if (!selectedItem) return;
+
+      editId.value = selectedItem.id;
+      editTitle.value = selectedItem.title || '';
+      editType.value = selectedItem.type || 'account';
+      editChain.value = selectedItem.chain || 'ethereum';
+      editPrice.value = selectedItem.price || 0;
+      editDescription.value = selectedItem.description || '';
+
+      detailModal.classList.add('hidden');
+      editModal.classList.remove('hidden');
+    };
+
+    closeEditModal.onclick = () => editModal.classList.add('hidden');
+    editModal.onclick = e => { if (e.target === editModal) editModal.classList.add('hidden'); };
+
+    editForm.onsubmit = async e => {
+      e.preventDefault();
+      const id = editId.value;
+      if (!id || !currentAddress) return;
+
+      const title = editTitle.value.trim();
+      const type = editType.value;
+      const chain = editChain.value;
+      const price = parseFloat(editPrice.value);
+      const description = editDescription.value.trim();
+
+      if (!title || isNaN(price) || price <= 0) return alert("Please fill in valid information!");
+
+      try {
+        await update(ref(db, `items/${id}`), {
+          title, type, chain, price, description,
+          updatedAt: serverTimestamp()
+        });
+        alert("Update successful!");
+        editModal.classList.add('hidden');
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+
+    // Filters & Sort
+    function updateFilter(filter, btn) {
+      currentFilter = filter;
+      [filterAll, filterAccount, filterDomain].forEach(b => b.classList.remove('filter-active'));
+      btn.classList.add('filter-active');
+      updateDisplay();
+    }
+    filterAll.onclick = () => updateFilter('all', filterAll);
+    filterAccount.onclick = () => updateFilter('account', filterAccount);
+    filterDomain.onclick = () => updateFilter('domain', filterDomain);
+
+    function updateSort(sort, btn) {
+      currentSort = sort;
+      [sortNewest, sortPriceAsc, sortPriceDesc].forEach(b => b.classList.remove('filter-active'));
+      btn.classList.add('filter-active');
+      updateDisplay();
+    }
+    sortNewest.onclick = () => updateSort('newest', sortNewest);
+    sortPriceAsc.onclick = () => updateSort('priceAsc', sortPriceAsc);
+    sortPriceDesc.onclick = () => updateSort('priceDesc', sortPriceDesc);
+
+    searchBtn.onclick = () => {
+      currentSearch = searchInput.value.trim();
+      updateDisplay();
+    };
+    searchInput.addEventListener('input', () => {
+      currentSearch = searchInput.value.trim();
+      updateDisplay();
+    });
+
+    // Init
+    listenToMarketplace();
+    if (localStorage.getItem('walletConnected') === 'true' && window.ethereum) {
+      connectWallet();
+    } else {
+      notConnected.classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
