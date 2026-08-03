@@ -405,6 +405,53 @@
       return parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
     }
 
+    // ================= TÁCH GIỜ TRỰC THEO TỪNG NGÀY LỊCH (QUA 0H = SANG NGÀY/THÁNG MỚI) =================
+    // Trả về mảng các đoạn { date: 'YYYY-MM-DD', hours: X }, mỗi đoạn nằm gọn trong 1 ngày dương lịch.
+    // Nhờ đó nếu ca trực bắt đầu ở tháng cũ và kết thúc sau 0h ngày 1 tháng mới, số giờ sẽ được
+    // cộng đúng cho ngày/tháng cũ (phần trước 0h) và ngày/tháng mới (phần sau 0h).
+    function splitDurationByCalendarDay(inTimestamp, outTimestamp) {
+      const segments = [];
+      if (!inTimestamp || !outTimestamp || outTimestamp <= inTimestamp) return segments;
+
+      let cursor = inTimestamp;
+      const MS_PER_HOUR = 1000 * 60 * 60;
+
+      while (cursor < outTimestamp) {
+        const cursorDate = new Date(cursor);
+        // Mốc 0h00 của ngày kế tiếp (chính là ranh giới "qua 0h")
+        const nextMidnight = new Date(
+          cursorDate.getFullYear(),
+          cursorDate.getMonth(),
+          cursorDate.getDate() + 1,
+          0, 0, 0, 0
+        ).getTime();
+
+        const segmentEnd = Math.min(outTimestamp, nextMidnight);
+        const hours = (segmentEnd - cursor) / MS_PER_HOUR;
+
+        const dateStr = cursorDate.getFullYear() + '-' +
+          String(cursorDate.getMonth() + 1).padStart(2, '0') + '-' +
+          String(cursorDate.getDate()).padStart(2, '0');
+
+        segments.push({ date: dateStr, hours: parseFloat(hours.toFixed(2)) });
+        cursor = segmentEnd;
+      }
+
+      return segments;
+    }
+
+    // Ghi chú ngắn hiển thị trong bảng lịch sử khi ca trực vắt qua 0h (đổi ngày / có thể đổi tháng)
+    function getCrossMidnightNote(item) {
+      if (!item.checkInTimestamp || !item.checkOutTimestamp) return '';
+      const segments = splitDurationByCalendarDay(item.checkInTimestamp, item.checkOutTimestamp);
+      if (segments.length <= 1) return '';
+
+      return segments.map(seg => {
+        const [y, m, d] = seg.date.split('-');
+        return `${d}/${m}: ${seg.hours}h`;
+      }).join(' + ');
+    }
+
     // ================= CHẤM CÔNG TRỰC TUYẾN (CHECK-IN / CHECK-OUT) =================
     btnCheckIn.addEventListener('click', () => {
       if (!currentUser) return;
@@ -518,6 +565,7 @@
         list.forEach(item => {
           const [y, m, d] = item.date.split('-');
           const formattedDisplayDate = (d && m && y) ? `${d}/${m}/${y}` : item.date;
+          const crossNote = getCrossMidnightNote(item);
           
           htmlRows += `
             <tr class="hover:bg-slate-50 transition">
@@ -529,7 +577,10 @@
               </td>
               <td class="py-4 px-6 font-mono text-slate-500">${item.checkInTime}</td>
               <td class="py-4 px-6 font-mono text-slate-500">${item.checkOutTime || '<span class="text-amber-500 font-bold animate-pulse">Đang trực...</span>'}</td>
-              <td class="py-4 px-6 font-bold text-slate-800 text-center sm:text-left">${item.totalHours ? item.totalHours + ' giờ' : '--'}</td>
+              <td class="py-4 px-6 font-bold text-slate-800 text-center sm:text-left">
+                ${item.totalHours ? item.totalHours + ' giờ' : '--'}
+                ${crossNote ? `<div class="mt-1 text-[11px] font-normal text-slate-400"><i class="fa-solid fa-circle-half-stroke mr-1"></i>Qua 0h: ${crossNote}</div>` : ''}
+              </td>
               <td class="py-4 px-6 text-center">
                 <div class="inline-flex gap-2">
                   <button onclick="openEditModal('${item.id}', '${item.date}', '${item.shift}', '${item.checkInTime}', '${item.checkOutTime || ''}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Chỉnh sửa ca">
@@ -545,7 +596,7 @@
         });
         historyTableBody.innerHTML = htmlRows;
 
-        // Tính toán thống kê theo Lịch Chuẩn (Tháng / Tuần / Ngày)
+        // Tính toán thống kê theo Lịch Chuẩn (Tháng / Tuần / Ngày), có tách giờ qua 0h
         calculateExactStats(list);
 
         // Cập nhật trạng thái nút bấm
@@ -588,7 +639,7 @@
       shiftRadios.forEach(radio => radio.disabled = false);
     }
 
-    // ================= TÍNH GIỜ LÀM THEO THÁNG / TUẦN / HÔM NAY =================
+    // ================= TÍNH GIỜ LÀM THEO THÁNG / TUẦN / HÔM NAY (CÓ TÁCH GIỜ QUA 0H) =================
     function calculateExactStats(records) {
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -614,27 +665,37 @@
       let hoursMonth = 0;
 
       records.forEach(item => {
-        if (!item.totalHours) return;
+        // Ưu tiên tách theo từng ngày lịch dựa trên timestamp thực tế (chính xác cho cả ca qua 0h/qua tháng)
+        if (item.checkInTimestamp && item.checkOutTimestamp) {
+          const segments = splitDurationByCalendarDay(item.checkInTimestamp, item.checkOutTimestamp);
 
-        let recordTime = item.timestamp;
-        if (!recordTime && item.date) {
-          const [y, m, d] = item.date.split('-').map(Number);
-          recordTime = new Date(y, m - 1, d).getTime();
-        }
+          segments.forEach(seg => {
+            const [y, m, d] = seg.date.split('-').map(Number);
+            const segDayStart = new Date(y, m - 1, d, 0, 0, 0).getTime();
 
-        // Kiểm tra thuộc cùng Tháng này
-        if (recordTime >= startOfMonth && recordTime <= endOfMonth) {
-          hoursMonth += Number(item.totalHours);
-        }
-
-        // Kiểm tra thuộc Tuần này
-        if (recordTime >= startOfWeek) {
-          hoursWeek += Number(item.totalHours);
-        }
-
-        // Kiểm tra thuộc Hôm nay
-        if (recordTime >= startOfToday) {
-          hoursToday += Number(item.totalHours);
+            // Hôm nay: đoạn giờ phải rơi đúng vào ngày hôm nay
+            if (segDayStart === startOfToday) {
+              hoursToday += seg.hours;
+            }
+            // Tuần này: đoạn giờ rơi vào ngày từ Thứ Hai của tuần hiện tại trở đi
+            if (segDayStart >= startOfWeek) {
+              hoursWeek += seg.hours;
+            }
+            // Tháng này: đoạn giờ rơi vào khoảng ngày 1 đến ngày cuối tháng hiện tại
+            if (segDayStart >= startOfMonth && segDayStart <= endOfMonth) {
+              hoursMonth += seg.hours;
+            }
+          });
+        } else if (item.totalHours) {
+          // Dự phòng cho các bản ghi cũ không có checkOutTimestamp: dùng cách tính cũ
+          let recordTime = item.timestamp;
+          if (!recordTime && item.date) {
+            const [y, m, d] = item.date.split('-').map(Number);
+            recordTime = new Date(y, m - 1, d).getTime();
+          }
+          if (recordTime >= startOfMonth && recordTime <= endOfMonth) hoursMonth += Number(item.totalHours);
+          if (recordTime >= startOfWeek) hoursWeek += Number(item.totalHours);
+          if (recordTime >= startOfToday) hoursToday += Number(item.totalHours);
         }
       });
 
