@@ -3,16 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ thống Quản lý & Chấm công Bảo vệ 12H</title>
+  <title>👋HAHA 12H</title>
   
-  <!-- Cài đặt Favicon Icon bảo vệ cho website -->
+  <!-- Favicon Icon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%232563eb%22><path d=%22M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z%22/></svg>">
   
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
@@ -207,7 +205,7 @@
         </div>
       </div>
 
-      <!-- BẢNG LỊCH SỬ CHẤM CÔNG (HỖ TRỢ EDIT/DELETE) -->
+      <!-- BẢNG LỊCH SỬ CHẤM CÔNG -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
           <h2 class="font-bold text-slate-900 flex items-center gap-2">
@@ -242,7 +240,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 px-6 mt-12 text-center text-xs text-slate-400">
       <div class="max-w-5xl mx-auto">
-        &copy; 2026 Hệ thống nội bộ Security Guard Check-in Pro. Bảo lưu mọi quyền.
+        &copy; 2026 Hệ thống nội bộ Security Guard Check-in Pro.
       </div>
     </footer>
   </div>
@@ -295,24 +293,24 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, set, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Cấu hình Firebase
+    // Cấu hình Firebase Mới (vlbaovework)
     const firebaseConfig = {
-      apiKey: "AIzaSyAHykzdOOhBGk972wuEk55QTiInb6oNDsc",
-      authDomain: "ptptt-pcpc.firebaseapp.com",
-      databaseURL: "https://ptptt-pcpc-default-rtdb.firebaseio.com",
-      projectId: "ptptt-pcpc",
-      storageBucket: "ptptt-pcpc.firebasestorage.app",
-      messagingSenderId: "334612619008",
-      appId: "1:334612619008:web:b5342800ffc2ae13335de5"
+      apiKey: "AIzaSyB_fB6fPUZH4uJVpK9pzkjs7DP07kNW2MU",
+      authDomain: "vlbaovework.firebaseapp.com",
+      databaseURL: "https://vlbaovework-default-rtdb.firebaseio.com",
+      projectId: "vlbaovework",
+      storageBucket: "vlbaovework.firebasestorage.app",
+      messagingSenderId: "478788881372",
+      appId: "1:478788881372:web:a3cfc3f6ce2c22cc0c9d19"
     };
 
-    // Khởi tạo các ứng dụng Firebase
+    // Khởi tạo các dịch vụ Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
     const googleProvider = new GoogleAuthProvider();
 
-    // Elements DOM
+    // DOM Elements
     const loginScreen = document.getElementById('login-screen');
     const appScreen = document.getElementById('app-screen');
     const btnLogin = document.getElementById('btn-login');
@@ -337,7 +335,6 @@
     const historyTableBody = document.getElementById('history-table-body');
     const historyCount = document.getElementById('history-count');
     
-    // Manual Chấm công & Modal Edit Elements
     const formManual = document.getElementById('form-manual-attendance');
     const editModal = document.getElementById('edit-modal');
     const formEdit = document.getElementById('form-edit-attendance');
@@ -356,7 +353,7 @@
     let currentUser = null;
     let currentActiveKey = null;
 
-    // Đăng nhập / Đăng xuất hệ thống
+    // Quản lý trạng thái Đăng nhập
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
@@ -367,7 +364,7 @@
         userEmail.textContent = user.email;
         userAvatar.src = user.photoURL || 'https://via.placeholder.com/150';
 
-        // Tải dữ liệu toàn bộ ca trực & Phân tích giờ làm
+        // Tải dữ liệu từ đường dẫn khớp với Firebase Security Rules (`users/UID/attendance`)
         loadDashboardData(user.uid);
       } else {
         currentUser = null;
@@ -379,7 +376,7 @@
     btnLogin.addEventListener('click', () => signInWithPopup(auth, googleProvider));
     btnLogout.addEventListener('click', () => confirm("Bạn muốn đăng xuất không?") && signOut(auth));
 
-    // Đồng hồ chạy thời gian thực
+    // Đồng hồ thời gian thực
     function runClock() {
       const now = new Date();
       liveClock.textContent = now.toLocaleTimeString('vi-VN', { hour12: false });
@@ -388,15 +385,35 @@
     setInterval(runClock, 1000);
     runClock();
 
-    // ================= CHỨC NĂNG CHẤM CÔNG THỜI GIAN THỰC (CREATE / UPDATE ON REALTIME) =================
+    // ================= CÔNG THỨC TÍNH SỐ GIỜ TRỰC CHÍNH XÁC =================
+    function calculateDurationInHours(dateStr, timeInStr, timeOutStr) {
+      if (!dateStr || !timeInStr || !timeOutStr) return 0;
+
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [inHour, inMin] = timeInStr.split(':').map(Number);
+      const [outHour, outMin] = timeOutStr.split(':').map(Number);
+
+      const inDate = new Date(year, month - 1, day, inHour, inMin);
+      let outDate = new Date(year, month - 1, day, outHour, outMin);
+
+      // Nếu giờ ra nhỏ hơn hoặc bằng giờ vào (VD: vào 18:00, ra 06:00 ngày hôm sau)
+      if (outDate <= inDate) {
+        outDate.setDate(outDate.getDate() + 1);
+      }
+
+      const diffMs = outDate.getTime() - inDate.getTime();
+      return parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+    }
+
+    // ================= CHẤM CÔNG TRỰC TUYẾN (CHECK-IN / CHECK-OUT) =================
     btnCheckIn.addEventListener('click', () => {
       if (!currentUser) return;
       const now = new Date();
       const selectedShift = document.querySelector('input[name="shift"]:checked').value;
-      const dateStr = now.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-'); // format: YYYY-MM-DD
+      const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
       const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-      const newRef = push(ref(db, `attendance/${currentUser.uid}`));
+      const newRef = push(ref(db, `users/${currentUser.uid}/attendance`));
       set(newRef, {
         date: dateStr,
         shift: selectedShift,
@@ -415,7 +432,7 @@
       const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
       const outTs = now.getTime();
 
-      const recordRef = ref(db, `attendance/${currentUser.uid}/${currentActiveKey}`);
+      const recordRef = ref(db, `users/${currentUser.uid}/attendance/${currentActiveKey}`);
       get(recordRef).then((snapshot) => {
         const record = snapshot.val();
         if (record) {
@@ -429,7 +446,7 @@
       });
     });
 
-    // ================= CHẤM CÔNG THỦ CÔNG (CREATE CA CHỮA QUÊN CHẤM) =================
+    // ================= CHẤM CÔNG THỦ CÔNG =================
     formManual.addEventListener('submit', (e) => {
       e.preventDefault();
       if (!currentUser) return;
@@ -439,38 +456,31 @@
       const mIn = document.getElementById('manual-time-in').value;
       const mOut = document.getElementById('manual-time-out').value;
 
-      // Tính tổng số giờ dựa vào thông số nhập vào
-      const inParts = mIn.split(':');
-      const outParts = mOut.split(':');
-      let inDateTime = new Date(mDate + 'T' + mIn);
-      let outDateTime = new Date(mDate + 'T' + mOut);
+      const diffHours = calculateDurationInHours(mDate, mIn, mOut);
 
-      // Nếu giờ ra nhỏ hơn giờ vào thì đó là ca trực đêm xuyên ngày hôm sau
-      if (outDateTime <= inDateTime) {
-        outDateTime.setDate(outDateTime.getDate() + 1);
-      }
+      const [year, month, day] = mDate.split('-').map(Number);
+      const [inHour, inMin] = mIn.split(':').map(Number);
+      const inTimestamp = new Date(year, month - 1, day, inHour, inMin).getTime();
 
-      const diffHours = parseFloat(((outDateTime - inDateTime) / (1000 * 60 * 60)).toFixed(2));
-
-      const newRef = push(ref(db, `attendance/${currentUser.uid}`));
+      const newRef = push(ref(db, `users/${currentUser.uid}/attendance`));
       set(newRef, {
         date: mDate,
         shift: mShift,
         checkInTime: mIn,
-        checkInTimestamp: inDateTime.getTime(),
+        checkInTimestamp: inTimestamp,
         checkOutTime: mOut,
-        checkOutTimestamp: outDateTime.getTime(),
+        checkOutTimestamp: inTimestamp + (diffHours * 3600 * 1000),
         totalHours: diffHours,
-        timestamp: inDateTime.getTime()
+        timestamp: inTimestamp
       }).then(() => {
         alert("Thêm ca trực thủ công thành công!");
         formManual.reset();
       });
     });
 
-    // ================= PHÂN TÍCH VÀ HIỂN THỊ DỮ LIỆU ĐĂNG KÝ (READ / UPDATE / DELETE) =================
+    // ================= TẢI DỮ LIỆU & BẢNG THỐNG KÊ GIỜ THEO THÁNG =================
     function loadDashboardData(userId) {
-      const dbRef = ref(db, `attendance/${userId}`);
+      const dbRef = ref(db, `users/${userId}/attendance`);
       
       onValue(dbRef, (snapshot) => {
         const data = snapshot.val();
@@ -493,22 +503,21 @@
           item.id = key;
           list.push(item);
 
-          // Ca đang hoạt động (Chưa checkout)
           if (!item.checkOutTime) {
             activeKey = key;
             activeSession = item;
           }
         });
 
-        // Đổ danh sách xếp theo thời gian mới nhất
+        // Sắp xếp ngày mới nhất lên đầu
         list.sort((a, b) => b.timestamp - a.timestamp);
         historyCount.textContent = `${list.length} ca trực`;
 
-        // Render lịch sử bảng
+        // Đổ dữ liệu ra bảng
         let htmlRows = "";
         list.forEach(item => {
-          const rawDate = new Date(item.date);
-          const formattedDisplayDate = isNaN(rawDate.getTime()) ? item.date : rawDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const [y, m, d] = item.date.split('-');
+          const formattedDisplayDate = (d && m && y) ? `${d}/${m}/${y}` : item.date;
           
           htmlRows += `
             <tr class="hover:bg-slate-50 transition">
@@ -536,10 +545,10 @@
         });
         historyTableBody.innerHTML = htmlRows;
 
-        // Tính toán các mốc giờ đã làm việc
-        calculateHoursStats(list);
+        // Tính toán thống kê theo Lịch Chuẩn (Tháng / Tuần / Ngày)
+        calculateExactStats(list);
 
-        // Đồng bộ trạng thái giao diện trực tuyến
+        // Cập nhật trạng thái nút bấm
         if (activeSession) {
           currentActiveKey = activeKey;
           statusIn.textContent = activeSession.checkInTime;
@@ -564,7 +573,6 @@
       });
     }
 
-    // Thiết lập lại trạng thái khi không có ca trực tuyến nào đang chạy
     function resetOnlineShiftState() {
       currentActiveKey = null;
       statusIn.textContent = "--:--";
@@ -580,19 +588,26 @@
       shiftRadios.forEach(radio => radio.disabled = false);
     }
 
-    // Tính toán thống kê giờ làm (Hôm nay, Tuần này, Tháng này)
-    function calculateHoursStats(records) {
+    // ================= TÍNH GIỜ LÀM THEO THÁNG / TUẦN / HÔM NAY =================
+    function calculateExactStats(records) {
       const now = new Date();
-      
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      
-      const dayOfWeek = now.getDay(); 
-      const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
-      const startOfWeek = new Date(now.setDate(diffToMonday));
-      startOfWeek.setHours(0,0,0,0);
-      const startOfWeekTime = startOfWeek.getTime();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); 
+      const currentDate = now.getDate();
 
-      const startOfMonthTime = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      // Mốc đầu ngày hôm nay (00:00:00)
+      const startOfToday = new Date(currentYear, currentMonth, currentDate, 0, 0, 0).getTime();
+
+      // Mốc đầu tuần (Thứ Hai)
+      const dayOfWeek = now.getDay();
+      const distanceToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const startOfWeek = new Date(currentYear, currentMonth, currentDate - distanceToMonday, 0, 0, 0).getTime();
+
+      // Mốc đầu tháng hiện tại (Ngày 1 đầu tháng lúc 00:00:00)
+      const startOfMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0).getTime();
+      
+      // Mốc cuối tháng hiện tại (23:59:59 ngày cuối cùng)
+      const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59).getTime();
 
       let hoursToday = 0;
       let hoursWeek = 0;
@@ -600,19 +615,26 @@
 
       records.forEach(item => {
         if (!item.totalHours) return;
-        const recordTs = item.timestamp;
 
-        // Cộng dồn tháng này
-        if (recordTs >= startOfMonthTime) {
-          hoursMonth += item.totalHours;
+        let recordTime = item.timestamp;
+        if (!recordTime && item.date) {
+          const [y, m, d] = item.date.split('-').map(Number);
+          recordTime = new Date(y, m - 1, d).getTime();
         }
-        // Cộng dồn tuần này
-        if (recordTs >= startOfWeekTime) {
-          hoursWeek += item.totalHours;
+
+        // Kiểm tra thuộc cùng Tháng này
+        if (recordTime >= startOfMonth && recordTime <= endOfMonth) {
+          hoursMonth += Number(item.totalHours);
         }
-        // Cộng dồn hôm nay
-        if (recordTs >= startOfToday) {
-          hoursToday += item.totalHours;
+
+        // Kiểm tra thuộc Tuần này
+        if (recordTime >= startOfWeek) {
+          hoursWeek += Number(item.totalHours);
+        }
+
+        // Kiểm tra thuộc Hôm nay
+        if (recordTime >= startOfToday) {
+          hoursToday += Number(item.totalHours);
         }
       });
 
@@ -621,7 +643,7 @@
       statMonth.textContent = hoursMonth.toFixed(2) + " h";
     }
 
-    // ================= QUẢN TRỊ SỬA / XÓA CA (UPDATE & DELETE) =================
+    // ================= CHỈNH SỬA & XÓA BẢN GHI =================
     window.openEditModal = function(id, date, shift, inTime, outTime) {
       document.getElementById('edit-key').value = id;
       document.getElementById('edit-date').value = date;
@@ -634,13 +656,12 @@
     window.deleteRecord = function(id) {
       if (!currentUser) return;
       if (confirm("Bạn có chắc chắn muốn xóa bản ghi chấm công này?")) {
-        remove(ref(db, `attendance/${currentUser.uid}/${id}`))
+        remove(ref(db, `users/${currentUser.uid}/attendance/${id}`))
           .then(() => alert("Đã xóa ca trực thành công!"))
           .catch(err => alert("Lỗi khi xóa: " + err.message));
       }
     }
 
-    // Sự kiện lưu thay đổi sửa đổi
     formEdit.addEventListener('submit', (e) => {
       e.preventDefault();
       if (!currentUser) return;
@@ -651,30 +672,26 @@
       const uIn = document.getElementById('edit-time-in').value;
       const uOut = document.getElementById('edit-time-out').value;
 
-      // Tính lại tổng giờ
-      let inDateTime = new Date(uDate + 'T' + uIn);
-      let outDateTime = new Date(uDate + 'T' + uOut);
-      if (outDateTime <= inDateTime) {
-        outDateTime.setDate(outDateTime.getDate() + 1);
-      }
-      const diffHours = parseFloat(((outDateTime - inDateTime) / (1000 * 60 * 60)).toFixed(2));
+      const diffHours = calculateDurationInHours(uDate, uIn, uOut);
+      const [year, month, day] = uDate.split('-').map(Number);
+      const [inHour, inMin] = uIn.split(':').map(Number);
+      const inTimestamp = new Date(year, month - 1, day, inHour, inMin).getTime();
 
-      update(ref(db, `attendance/${currentUser.uid}/${key}`), {
+      update(ref(db, `users/${currentUser.uid}/attendance/${key}`), {
         date: uDate,
         shift: uShift,
         checkInTime: uIn,
-        checkInTimestamp: inDateTime.getTime(),
+        checkInTimestamp: inTimestamp,
         checkOutTime: uOut,
-        checkOutTimestamp: outDateTime.getTime(),
+        checkOutTimestamp: inTimestamp + (diffHours * 3600 * 1000),
         totalHours: diffHours,
-        timestamp: inDateTime.getTime()
+        timestamp: inTimestamp
       }).then(() => {
         alert("Đã cập nhật ca trực thành công!");
         editModal.classList.add('hidden');
       }).catch(err => alert("Lỗi: " + err.message));
     });
 
-    // Các sự kiện đóng mở Modal
     document.getElementById('close-modal').addEventListener('click', () => editModal.classList.add('hidden'));
     document.getElementById('btn-cancel-edit').addEventListener('click', () => editModal.classList.add('hidden'));
   </script>
