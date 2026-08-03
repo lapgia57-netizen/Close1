@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📅 Báo Cáo Giờ Trực Theo Tháng</title>
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%232563eb%22><path d=%22M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z%22/></svg>">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+  <!-- ================= MÀN HÌNH ĐĂNG NHẬP ================= -->
+  <div id="login-screen" class="flex-1 flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-slate-100">
+      <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+        <i class="fa-solid fa-calendar-check"></i>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">Báo Cáo Giờ Trực Theo Tháng</h1>
+      <p class="text-slate-500 mb-8 text-sm">Đăng nhập bằng tài khoản Google để xem lại đầy đủ dữ liệu chấm công theo từng tháng.</p>
+
+      <button id="btn-login" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold py-3 px-4 rounded-xl shadow-sm transition duration-200">
+        <svg class="w-5 h-5" viewBox="0 0 24 24">
+          <path fill="#EA4335" d="M12 5.04c1.64 0 3.12.56 4.28 1.67l3.2-3.2C17.52 1.58 14.96 1 12 1 7.35 1 3.4 3.65 1.49 7.5l3.8 2.94C6.23 7.39 8.89 5.04 12 5.04z"/>
+          <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.43h6.45c-.28 1.48-1.11 2.74-2.37 3.59l3.68 2.85c2.15-1.98 3.39-4.9 3.39-8.53z"/>
+          <path fill="#FBBC05" d="M5.29 14.44c-.24-.72-.38-1.5-.38-2.31s.14-1.59.38-2.31L1.49 6.88C.54 8.78 0 10.9 0 13.12c0 2.22.54 4.34 1.49 6.24l3.8-2.92z"/>
+          <path fill="#34A853" d="M12 23c3.24 0 5.95-1.08 7.93-2.91l-3.68-2.85c-1.02.68-2.33 1.09-4.25 1.09-3.11 0-5.77-2.35-6.71-5.4l-3.8 2.94C3.4 20.35 7.35 23 12 23z"/>
+        </svg>
+        Đăng nhập với Google
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MÀN HÌNH CHÍNH ================= -->
+  <div id="app-screen" class="hidden flex-1 flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-10">
+      <div class="max-w-5xl mx-auto flex justify-between items-center flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center text-lg shadow-md shadow-blue-200">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-slate-900 leading-tight">Báo Cáo Giờ Trực Theo Tháng</h1>
+            <p class="text-xs text-slate-500">Xem đầy đủ dữ liệu chấm công của một tháng</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="text-right hidden sm:block">
+            <p id="user-name" class="font-medium text-sm text-slate-800">Tên Bảo Vệ</p>
+            <p id="user-email" class="text-xs text-slate-500">email@gmail.com</p>
+          </div>
+          <img id="user-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
+          <button id="btn-logout" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-slate-100 transition" title="Đăng xuất">
+            <i class="fa-solid fa-right-from-bracket text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl w-full mx-auto p-4 sm:p-6 flex-1 space-y-6">
+
+      <!-- BỘ CHỌN THÁNG -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg"><i class="fa-solid fa-filter"></i></div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Chọn tháng đã có dữ liệu trực</p>
+            <p class="text-sm font-semibold text-slate-800">Danh sách chỉ hiện các tháng đã ghi nhận ca trực</p>
+          </div>
+        </div>
+        <select id="month-select" class="w-full sm:w-64 border border-slate-200 rounded-xl px-4 py-2.5 bg-white font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <option value="">-- Chưa có dữ liệu --</option>
+        </select>
+      </div>
+
+      <!-- THỐNG KÊ TỔNG QUAN THÁNG ĐÃ CHỌN -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex items-center gap-4">
+          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Tổng giờ trực trong tháng</p>
+            <p id="stat-month-total" class="text-2xl font-bold text-slate-900">0.00 h</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex items-center gap-4">
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-days"></i></div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Số ngày có trực</p>
+            <p id="stat-month-days" class="text-2xl font-bold text-slate-900">0 / 0</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex items-center gap-4">
+          <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-sun"></i></div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Số ca ngày</p>
+            <p id="stat-month-day-shifts" class="text-2xl font-bold text-slate-900">0</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex items-center gap-4">
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-moon"></i></div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Số ca đêm</p>
+            <p id="stat-month-night-shifts" class="text-2xl font-bold text-slate-900">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- BẢNG DỮ LIỆU ĐẦY ĐỦ TỪNG NGÀY TRONG THÁNG -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center flex-wrap gap-2">
+          <h2 class="font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-blue-600"></i> Chi Tiết Từng Ngày Trong Tháng
+          </h2>
+          <span id="month-title-badge" class="text-xs bg-blue-50 text-blue-600 py-1 px-2.5 rounded-full font-semibold">--</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/50 text-slate-400 text-xs font-semibold uppercase border-b border-slate-100">
+                <th class="py-3 px-6">Ngày</th>
+                <th class="py-3 px-6">Thứ</th>
+                <th class="py-3 px-6">Ca Trực</th>
+                <th class="py-3 px-6">Giờ Vào - Ra</th>
+                <th class="py-3 px-6">Tổng Giờ Trong Ngày</th>
+                <th class="py-3 px-6">Ghi Chú</th>
+              </tr>
+            </thead>
+            <tbody id="month-table-body" class="divide-y divide-slate-100 text-sm text-slate-600">
+              <tr>
+                <td colspan="6" class="py-8 text-center text-slate-400">Đang tải dữ liệu...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 px-6 mt-12 text-center text-xs text-slate-400">
+      <div class="max-w-5xl mx-auto">
+        &copy; 2026 Hệ thống nội bộ Security Guard Check-in Pro.
+      </div>
+    </footer>
+  </div>
+
+  <!-- FIREBASE SDK VÀ LOGIC HOẠT ĐỘNG CHÍNH -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // Cấu hình Firebase - dùng chung với hệ thống chấm công gốc (vlbaovework)
+    const firebaseConfig = {
+      apiKey: "AIzaSyB_fB6fPUZH4uJVpK9pzkjs7DP07kNW2MU",
+      authDomain: "vlbaovework.firebaseapp.com",
+      databaseURL: "https://vlbaovework-default-rtdb.firebaseio.com",
+      projectId: "vlbaovework",
+      storageBucket: "vlbaovework.firebasestorage.app",
+      messagingSenderId: "478788881372",
+      appId: "1:478788881372:web:a3cfc3f6ce2c22cc0c9d19"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // DOM Elements
+    const loginScreen = document.getElementById('login-screen');
+    const appScreen = document.getElementById('app-screen');
+    const btnLogin = document.getElementById('btn-login');
+    const btnLogout = document.getElementById('btn-logout');
+
+    const userName = document.getElementById('user-name');
+    const userEmail = document.getElementById('user-email');
+    const userAvatar = document.getElementById('user-avatar');
+
+    const monthSelect = document.getElementById('month-select');
+    const monthTitleBadge = document.getElementById('month-title-badge');
+    const monthTableBody = document.getElementById('month-table-body');
+
+    const statMonthTotal = document.getElementById('stat-month-total');
+    const statMonthDays = document.getElementById('stat-month-days');
+    const statMonthDayShifts = document.getElementById('stat-month-day-shifts');
+    const statMonthNightShifts = document.getElementById('stat-month-night-shifts');
+
+    const WEEKDAY_LABELS = ['CN', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+    const MS_PER_HOUR = 1000 * 60 * 60;
+
+    let currentUser = null;
+    let allRecords = []; // toàn bộ bản ghi chấm công của user
+
+    // Quản lý trạng thái Đăng nhập
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loginScreen.classList.add('hidden');
+        appScreen.classList.remove('hidden');
+
+        userName.textContent = user.displayName;
+        userEmail.textContent = user.email;
+        userAvatar.src = user.photoURL || 'https://via.placeholder.com/150';
+
+        loadAttendanceData(user.uid);
+      } else {
+        currentUser = null;
+        loginScreen.classList.remove('hidden');
+        appScreen.classList.add('hidden');
+      }
+    });
+
+    btnLogin.addEventListener('click', () => signInWithPopup(auth, googleProvider));
+    btnLogout.addEventListener('click', () => confirm("Bạn muốn đăng xuất không?") && signOut(auth));
+
+    // ================= CÔNG THỨC GỐC: TÍNH GIỜ THEO TỪNG NGÀY LỊCH =================
+    // Giống hệt logic trong hệ thống chấm công gốc: nếu ca trực vắt qua 0h,
+    // giờ trước 0h được tính cho ngày/tháng cũ, giờ sau 0h được tính cho ngày/tháng mới.
+    function splitRecordIntoDaySegments(item) {
+      const segments = [];
+      if (!item.checkInTimestamp || !item.checkOutTimestamp) return segments;
+      if (item.checkOutTimestamp <= item.checkInTimestamp) return segments;
+
+      let cursor = item.checkInTimestamp;
+
+      while (cursor < item.checkOutTimestamp) {
+        const cursorDate = new Date(cursor);
+        const nextMidnight = new Date(
+          cursorDate.getFullYear(),
+          cursorDate.getMonth(),
+          cursorDate.getDate() + 1,
+          0, 0, 0, 0
+        ).getTime();
+
+        const segmentEnd = Math.min(item.checkOutTimestamp, nextMidnight);
+        const hours = parseFloat(((segmentEnd - cursor) / MS_PER_HOUR).toFixed(2));
+
+        const dateStr = cursorDate.getFullYear() + '-' +
+          String(cursorDate.getMonth() + 1).padStart(2, '0') + '-' +
+          String(cursorDate.getDate()).padStart(2, '0');
+
+        const isStart = cursor === item.checkInTimestamp;
+        const isEnd = segmentEnd === item.checkOutTimestamp;
+
+        segments.push({
+          date: dateStr,
+          hours: hours,
+          shift: item.shift,
+          recordId: item.id,
+          timeIn: isStart ? item.checkInTime : "00:00",
+          timeOut: isEnd ? item.checkOutTime : "24:00",
+          crossesMidnight: !(isStart && isEnd)
+        });
+
+        cursor = segmentEnd;
+      }
+
+      return segments;
+    }
+
+    function loadAttendanceData(userId) {
+      const dbRef = ref(db, `users/${userId}/attendance`);
+
+      onValue(dbRef, (snapshot) => {
+        const data = snapshot.val();
+        allRecords = [];
+
+        if (data) {
+          Object.keys(data).forEach(key => {
+            const item = data[key];
+            item.id = key;
+            // Chỉ lấy các ca đã check-out (có đủ giờ vào/ra để tính toán chính xác)
+            if (item.checkInTimestamp && item.checkOutTimestamp) {
+              allRecords.push(item);
+            }
+          });
+        }
+
+        populateMonthSelector();
+      });
+    }
+
+    // ================= TÌM CÁC THÁNG ĐÃ CÓ GHI NHẬN THỜI GIAN TRỰC =================
+    function populateMonthSelector() {
+      const monthsWithData = new Set(); // "YYYY-MM"
+
+      allRecords.forEach(item => {
+        const segments = splitRecordIntoDaySegments(item);
+        segments.forEach(seg => {
+          monthsWithData.add(seg.date.substring(0, 7)); // "YYYY-MM"
+        });
+      });
+
+      const sortedMonths = Array.from(monthsWithData).sort().reverse(); // mới nhất trước
+      const previousSelection = monthSelect.value;
+
+      if (sortedMonths.length === 0) {
+        monthSelect.innerHTML = `<option value="">-- Chưa có dữ liệu --</option>`;
+        renderEmptyMonth();
+        return;
+      }
+
+      monthSelect.innerHTML = sortedMonths.map(ym => {
+        const [y, m] = ym.split('-');
+        return `<option value="${ym}">Tháng ${parseInt(m, 10)}/${y}</option>`;
+      }).join('');
+
+      // Giữ lựa chọn cũ nếu vẫn còn tồn tại, ngược lại chọn tháng mới nhất
+      if (previousSelection && sortedMonths.includes(previousSelection)) {
+        monthSelect.value = previousSelection;
+      } else {
+        monthSelect.value = sortedMonths[0];
+      }
+
+      renderMonth(monthSelect.value);
+    }
+
+    monthSelect.addEventListener('change', () => {
+      if (monthSelect.value) renderMonth(monthSelect.value);
+    });
+
+    function renderEmptyMonth() {
+      monthTitleBadge.textContent = "--";
+      monthTableBody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">Chưa có ca trực nào được ghi nhận.</td></tr>`;
+      statMonthTotal.textContent = "0.00 h";
+      statMonthDays.textContent = "0 / 0";
+      statMonthDayShifts.textContent = "0";
+      statMonthNightShifts.textContent = "0";
+    }
+
+    // ================= HIỂN THỊ ĐẦY ĐỦ DỮ LIỆU CỦA MỘT THÁNG =================
+    function renderMonth(yearMonth) {
+      const [year, month] = yearMonth.split('-').map(Number); // month: 1-12
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      monthTitleBadge.textContent = `Tháng ${month}/${year} • ${daysInMonth} ngày`;
+
+      // Gom toàn bộ đoạn giờ (segments) thuộc tháng này, nhóm theo ngày
+      const segmentsByDate = {}; // "YYYY-MM-DD" -> [segments]
+      allRecords.forEach(item => {
+        const segments = splitRecordIntoDaySegments(item);
+        segments.forEach(seg => {
+          if (seg.date.substring(0, 7) === yearMonth) {
+            if (!segmentsByDate[seg.date]) segmentsByDate[seg.date] = [];
+            segmentsByDate[seg.date].push(seg);
+          }
+        });
+      });
+
+      let monthTotalHours = 0;
+      let daysWithShift = 0;
+      let dayShiftCount = 0;
+      let nightShiftCount = 0;
+      let rowsHtml = "";
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        const weekdayIndex = new Date(year, month - 1, day).getDay();
+        const weekdayLabel = WEEKDAY_LABELS[weekdayIndex];
+        const daySegments = (segmentsByDate[dateStr] || []).sort((a, b) => a.timeIn.localeCompare(b.timeIn));
+
+        if (daySegments.length === 0) {
+          rowsHtml += `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-6 font-semibold text-slate-400">${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}</td>
+              <td class="py-3 px-6 text-slate-300">${weekdayLabel}</td>
+              <td class="py-3 px-6 text-slate-300">--</td>
+              <td class="py-3 px-6 text-slate-300">--</td>
+              <td class="py-3 px-6 text-slate-300">--</td>
+              <td class="py-3 px-6 text-slate-300">Không trực</td>
+            </tr>
+          `;
+          continue;
+        }
+
+        daysWithShift++;
+        let dayTotalHours = 0;
+        const shiftBadges = [];
+        const timeRanges = [];
+        const notes = [];
+
+        daySegments.forEach(seg => {
+          dayTotalHours += seg.hours;
+          const isDay = seg.shift.includes('Ngày');
+          if (isDay) dayShiftCount++; else nightShiftCount++;
+
+          shiftBadges.push(`
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${isDay ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'}">
+              <i class="fa-solid ${isDay ? 'fa-sun' : 'fa-moon'}"></i> ${seg.shift.split(' (')[0]}
+            </span>
+          `);
+          timeRanges.push(`${seg.timeIn} - ${seg.timeOut} (${seg.hours}h)`);
+          if (seg.crossesMidnight) notes.push('Ca vắt qua 0h (đổi ngày)');
+        });
+
+        monthTotalHours += dayTotalHours;
+
+        rowsHtml += `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-6 font-semibold text-slate-900">${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}</td>
+            <td class="py-3 px-6 text-slate-500">${weekdayLabel}</td>
+            <td class="py-3 px-6"><div class="flex flex-col gap-1">${shiftBadges.join('')}</div></td>
+            <td class="py-3 px-6 font-mono text-slate-500 text-xs"><div class="flex flex-col gap-1">${timeRanges.join('<br>')}</div></td>
+            <td class="py-3 px-6 font-bold text-slate-800">${dayTotalHours.toFixed(2)} h</td>
+            <td class="py-3 px-6 text-[11px] text-slate-400">${notes.length ? notes.join('<br>') : ''}</td>
+          </tr>
+        `;
+      }
+
+      monthTableBody.innerHTML = rowsHtml;
+
+      statMonthTotal.textContent = monthTotalHours.toFixed(2) + " h";
+      statMonthDays.textContent = `${daysWithShift} / ${daysInMonth}`;
+      statMonthDayShifts.textContent = dayShiftCount;
+      statMonthNightShifts.textContent = nightShiftCount;
+    }
+  </script>
+</body>
+</html>
